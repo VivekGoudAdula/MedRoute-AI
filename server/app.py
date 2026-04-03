@@ -1,8 +1,10 @@
 from openenv.core.env_server import create_app
 from env.environment import MedRouteEnv
+from env.models import Action, Observation
 
 # This creates the official OpenEnv FastAPI + Gradio UI app
-app = create_app(MedRouteEnv)
+# It explicitly required the Action and Observation models to build the UI
+app = create_app(MedRouteEnv, Action, Observation)
 
 def main():
     import uvicorn
