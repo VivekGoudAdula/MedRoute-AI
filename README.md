@@ -1,4 +1,13 @@
-<<<<<<< HEAD
+---
+title: MedRoute AI
+emoji: 🏥
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # 🏥 MedRoute AI: Healthcare Triage Simulator
 
 An **OpenEnv-compliant reinforcement learning environment** that simulates real-world medical triage decision-making in rural and low-resource settings.
@@ -231,7 +240,6 @@ This system has potential applications in:
 MedRoute AI is not just a simulation — it is a **training ground for safer AI decision-making in healthcare**, where mistakes have real-world consequences.
 
 By combining structured environments with intelligent reward design, it pushes forward the development of **trustworthy AI systems for critical domains**.
-=======
 ---
 title: Medroute Ai
 emoji: 🏃
@@ -244,4 +252,3 @@ short_description: AI-powered healthcare triage simulation environment -OpenEnv
 ---
 
 Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
->>>>>>> 53d4059cde7661f9dab51e465dd07311725e0aaa
