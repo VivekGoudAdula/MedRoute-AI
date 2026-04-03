@@ -9,6 +9,8 @@ class Observation(BaseModel):
     step_count: int = Field(description="Current step in the triage process")
     max_steps: int = Field(description="Maximum steps allowed")
     feedback: Optional[str] = Field(default=None, description="System hint for the agent")
+    reward: float = Field(default=0.0, description="Cumulative or latest reward")
+    done: bool = Field(default=False, description="Whether the episode is finished")
 
 class Action(BaseModel):
     action_type: str = Field(description="Type of action: 'ASK', 'CLASSIFY_URGENCY', or 'DECIDE_TREATMENT'")

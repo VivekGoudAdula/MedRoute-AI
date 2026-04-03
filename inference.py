@@ -97,11 +97,13 @@ def run_simulation():
             action = get_agent_action(obs)
             
             # 2. Env step
-            obs_model, reward, done, info = env.step(action)
+            obs_model = env.step(action)
             obs = obs_model.model_dump()
+            reward = obs_model.reward or 0.0
+            done = obs_model.done or False
             rewards.append(reward)
 
-            # Check success condition (correct decision at high performance)
+            # Check success condition
             if done and reward >= 0.8:
                 success = True
 

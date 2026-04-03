@@ -1,11 +1,13 @@
+from openenv.core.env_server.interfaces import Environment as OpenEnvBase
 import random
 from typing import List, Dict, Tuple, Optional
 from .models import Observation, Action, Reward
 from .tasks import PatientCase, CASES
 from .grader import MedRouteGrader
 
-class MedRouteEnv:
+class MedRouteEnv(OpenEnvBase):
     def __init__(self, max_steps: int = 5, task_id: str = "complete-triage"):
+        super().__init__()
         self.max_steps = max_steps
         self.task_id = task_id
         self.grader = MedRouteGrader()
@@ -43,12 +45,14 @@ class MedRouteEnv:
             available_questions=self.case.relevant_questions,
             step_count=self.step_count,
             max_steps=self.max_steps,
-            feedback=feedback
+            feedback=feedback,
+            reward=self.final_reward,
+            done=self.done
         )
 
-    def step(self, action: Action) -> Tuple[Observation, float, bool, Dict]:
+    def step(self, action: Action) -> Observation:
         if self.done:
-            return self.state(), 0.0, True, {"reason": "episode already done"}
+            return self.state()
 
         self.step_count += 1
         
@@ -61,7 +65,7 @@ class MedRouteEnv:
         }
         reward_obj = self.grader.compute_reward(action, self.case, state_history)
         
-        # Efficiency penalty (Judges love this)
+        # Efficiency penalty
         if self.step_count > 6:
             reward_obj.total_reward -= 0.1
             reward_obj.penalty += 0.1
@@ -86,41 +90,28 @@ class MedRouteEnv:
                 
         # UPDATE FEEDBACK HINT FOR AGENT
         self.current_feedback = reward_obj.feedback
+        self.final_reward = reward_obj.total_reward
 
-        # Check termination (ONLY at DECIDE_TREATMENT or MAX_STEPS)
+        # Check termination
         if action.action_type == "DECIDE_TREATMENT" or self.step_count >= self.max_steps:
              self.done = True
 
-        info = {
-            "case_id": self.case.case_id,
-            "correct_decision": self.case.correct_decision,
-            "severity": self.case.severity,
-            "reward_details": reward_obj.model_dump()
-        }
-
-        return self.state(), reward_obj.total_reward, self.done, info
+        return self.state()
 
     def _check_revealed_symptoms(self, question: str) -> List[str]:
         q_lower = question.lower()
         new_symptoms = []
-        # Support both the key and words in the symptom itself as reveal triggers
         for keyword, symptom in self.case.hidden_symptoms.items():
-            # Check if keyword (root) is in question
-            # e.g., "itch" in "is it itching?"
             k_root = keyword.lower()[:4] if len(keyword) > 4 else keyword.lower()
-            
             if k_root in q_lower or keyword.lower() in q_lower:
                 if symptom not in self.revealed_symptoms:
                     new_symptoms.append(symptom)
                     continue
-
-            # Also check if any significant word in the symptom is asked about
             for word in symptom.lower().split():
                 if len(word) > 4 and word in q_lower:
                     if symptom not in self.revealed_symptoms:
                         new_symptoms.append(symptom)
                         break
-                        
         return new_symptoms
 
     def render(self):
