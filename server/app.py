@@ -15,6 +15,16 @@ class ActionInput(BaseModel):
 class ResetInput(BaseModel):
     task_id: str | None = None
 
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "project": "MedRoute AI: Healthcare Triage Simulator",
+        "docs": "/docs",
+        "specification": "OpenEnv 0.2.0-compliant",
+        "available_endpoints": ["/state", "/reset", "/step"]
+    }
+
 @app.post("/reset")
 def reset(input: ResetInput = None):
     task_id = input.task_id if input else None
