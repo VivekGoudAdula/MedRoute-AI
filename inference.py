@@ -9,11 +9,13 @@ from env.models import Action
 # Load .env variables
 load_dotenv()
 
-# Configuration
+# Configuration (Matches OpenEnv Checklist Strictly)
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
-# Requirements specify HF_TOKEN as the primary key
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+HF_TOKEN = os.getenv("HF_TOKEN")
+
+# Use HF_TOKEN as the primary API_KEY
+API_KEY = HF_TOKEN or os.getenv("OPENAI_API_KEY")
 
 # Task and Benchmark metadata
 TASK_NAME = os.getenv("TASK_NAME", "complete-triage")
