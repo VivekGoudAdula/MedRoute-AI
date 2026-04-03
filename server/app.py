@@ -21,6 +21,39 @@ app = create_fastapi_app(MedRouteEnv, Action, Observation)
 metadata = load_environment_metadata(MedRouteEnv, "MedRoute AI")
 web_manager = WebInterfaceManager(MedRouteEnv, Action, Observation, metadata)
 
+import openenv.core.env_server.gradio_ui as gradio_ui
+
+# --- UI MONKEY PATCH OVERRIDE ---
+# Hack to force the UI to render Reward and Done as massive banners!
+original_format_observation = gradio_ui._format_observation
+
+def custom_format_observation(data):
+    base_md = original_format_observation(data)
+    reward = data.get("reward")
+    done = data.get("done")
+    
+    if reward is not None or done is not None:
+        highlight = "<div style='background-color: #FF9800; color: white; padding: 15px 20px; border-radius: 10px; font-size: 24px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 3px solid #E65100;'>"
+        if reward is not None:
+            highlight += f"🏆 REWARD:  <span style='color: #FFE0B2;'>{reward:.2f}</span> &nbsp;&nbsp;&nbsp;&nbsp; "
+        if done is not None:
+            status_color = "#C8E6C9" if done else "#FFCDD2"
+            highlight += f"🏁 DONE:  <span style='color: {status_color};'>{done}</span>"
+        highlight += "</div><br/>"
+        
+        # Strip out the tiny original text
+        if f"**Reward:** `{reward}`" in base_md:
+            base_md = base_md.replace(f"**Reward:** `{reward}`", "")
+        if f"**Done:** `{done}`" in base_md:
+            base_md = base_md.replace(f"**Done:** `{done}`", "")
+            
+        return highlight + base_md.strip()
+        
+    return base_md
+
+gradio_ui._format_observation = custom_format_observation
+# --------------------------------
+
 # 3. Create Custom Quick Start Instructions for Judges
 custom_quick_start = """
 # 🩺 MedRoute AI: How to Test
