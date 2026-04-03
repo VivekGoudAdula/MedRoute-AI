@@ -1,0 +1,121 @@
+openenv_version: "1.0.0"
+
+name: "MedRoute AI: Healthcare Triage Simulator"
+
+description: >
+  A real-world OpenEnv environment simulating medical triage decision-making 
+  in rural and low-resource healthcare settings. Agents must gather patient 
+  information, assess urgency, and recommend safe treatment pathways using 
+  structured reasoning and progressive interaction.
+
+author: "Vivek Goud Adula"
+
+tags:
+  - healthcare
+  - triage
+  - reinforcement-learning
+  - decision-making
+  - medical-ai
+
+---
+
+tasks:
+  - id: 1
+    name: "Urgency Classification"
+    description: >
+      Classify the patient's condition into low, medium, or high severity 
+      based on observed and revealed symptoms.
+    difficulty: "easy"
+    reward_weight: 0.3
+
+  - id: 2
+    name: "Progressive Diagnosis"
+    description: >
+      Ask clinically relevant, non-redundant follow-up questions to uncover 
+      hidden symptoms and reduce uncertainty in diagnosis.
+    difficulty: "medium"
+    reward_weight: 0.3
+
+  - id: 3
+    name: "Treatment Decision"
+    description: >
+      Recommend an appropriate treatment action (home, clinic, hospital, emergency) 
+      based on the patient's condition, ensuring safety and efficiency.
+    difficulty: "hard"
+    reward_weight: 0.4
+
+---
+
+action_space:
+  type: "structured"
+
+  fields:
+    action_type:
+      type: "string"
+      enum: ["ASK", "CLASSIFY_URGENCY", "DECIDE_TREATMENT"]
+
+    content:
+      type: "string"
+      description: >
+        Natural language question or decision value depending on action type.
+
+    urgency:
+      type: "string"
+      enum: ["low", "medium", "high"]
+
+    decision:
+      type: "string"
+      enum: ["home", "clinic", "hospital", "emergency"]
+
+---
+
+observation_space:
+  type: "structured"
+
+  fields:
+    initial_symptoms:
+      type: "List[str]"
+      description: "Initial patient symptoms provided at reset."
+
+    revealed_symptoms:
+      type: "List[str]"
+      description: "Symptoms revealed progressively through questioning."
+
+    asked_questions:
+      type: "List[str]"
+      description: "History of agent's questions."
+
+    step_count:
+      type: "int"
+      description: "Current step number in the episode."
+
+    max_steps:
+      type: "int"
+      description: "Maximum allowed steps before forced termination."
+
+---
+
+evaluation:
+  metric: "normalized_total_reward"
+
+  success_threshold: 0.8
+
+  description: >
+    Agents are evaluated based on cumulative reward normalized between 0.0 and 1.0.
+    Successful agents demonstrate efficient questioning, accurate urgency 
+    classification, and safe final decision-making.
+
+---
+
+constraints:
+  max_steps: 8
+  compute:
+    vcpu: 2
+    memory: "8GB"
+
+---
+
+notes: >
+  The environment emphasizes real-world clinical reasoning, balancing safety,
+  efficiency, and cost-aware decision-making. Agents are penalized for 
+  redundant questions, delayed decisions, and unsafe recommendations.
