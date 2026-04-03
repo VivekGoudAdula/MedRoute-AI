@@ -20,7 +20,7 @@ tags:
 ---
 
 tasks:
-  - id: 1
+  - id: "urgency-discovery"
     name: "Urgency Classification"
     description: >
       Classify the patient's condition into low, medium, or high severity 
@@ -28,7 +28,7 @@ tasks:
     difficulty: "easy"
     reward_weight: 0.3
 
-  - id: 2
+  - id: "symptom-investigation"
     name: "Progressive Diagnosis"
     description: >
       Ask clinically relevant, non-redundant follow-up questions to uncover 
@@ -36,7 +36,7 @@ tasks:
     difficulty: "medium"
     reward_weight: 0.3
 
-  - id: 3
+  - id: "complete-triage"
     name: "Treatment Decision"
     description: >
       Recommend an appropriate treatment action (home, clinic, hospital, emergency) 

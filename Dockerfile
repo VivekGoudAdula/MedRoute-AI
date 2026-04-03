@@ -32,5 +32,5 @@ ENV MODEL_NAME="gpt-4o-mini"
 # Do NOT hardcode API keys (security + HF compatibility)
 # They will be passed during runtime
 
-# Run inference script
-CMD ["python", "inference.py"]
+# Run server
+CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]

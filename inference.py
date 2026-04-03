@@ -1,6 +1,5 @@
 import os
 import json
-import time
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -13,7 +12,12 @@ load_dotenv()
 # Configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Requirements specify HF_TOKEN as the primary key
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
+
+# Task and Benchmark metadata
+TASK_NAME = os.getenv("TASK_NAME", "complete-triage")
+BENCHMARK = os.getenv("BENCHMARK", "medroute-ai")
 
 # FALLBACK CONFIG (GROQ)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -25,7 +29,7 @@ def get_agent_action(obs: Dict, use_fallback=False) -> Action:
     
     client = OpenAI(
         base_url=API_BASE_URL if not use_fallback else GROQ_BASE_URL,
-        api_key=OPENAI_API_KEY if not use_fallback else GROQ_API_KEY
+        api_key=API_KEY if not use_fallback else GROQ_API_KEY
     )
     model = MODEL_NAME if not use_fallback else GROQ_MODEL
 
@@ -65,50 +69,54 @@ def get_agent_action(obs: Dict, use_fallback=False) -> Action:
         )
         data = json.loads(response.choices[0].message.content)
         return Action(**data)
-    except Exception as e:
-        if not use_fallback:
+    except Exception:
+        if not use_fallback and GROQ_API_KEY:
             return get_agent_action(obs, use_fallback=True)
         else:
             return Action(action_type="DECIDE_TREATMENT", value="clinic")
 
 def run_simulation():
+    # Pass task_id through env if supported, otherwise it uses default from grader
     env = MedRouteEnv(max_steps=8)
     obs_model = env.reset()
     obs = obs_model.model_dump()
     
-    print("[START]")
-    print(f"Patient initial symptoms: {obs['initial_symptoms']}")
+    # [START] line
+    print(f"[START] task={TASK_NAME} env={BENCHMARK} model={MODEL_NAME}")
     
     done = False
     step_num = 1
-    total_reward = 0.0
+    rewards = []
+    success = False
 
-    while not done:
-        # 1. Agent decision
-        action = get_agent_action(obs)
-        
-        # 2. Env step
-        obs_model, reward, done, info = env.step(action)
-        obs = obs_model.model_dump()
-        total_reward += reward
+    try:
+        while not done:
+            # 1. Agent decision
+            action = get_agent_action(obs)
+            
+            # 2. Env step
+            obs_model, reward, done, info = env.step(action)
+            obs = obs_model.model_dump()
+            rewards.append(reward)
 
-        # 3. Log step
-        print(f"[STEP] {step_num}")
-        print(f"Action: {action.action_type} -> {action.value}")
-        if action.reasoning:
-            print(f"Reason: {action.reasoning}")
-        print(f"Goal: Correct decision for {info['severity']} severity")
-        print(f"Symptoms Revealed: {obs['revealed_symptoms']}")
-        print(f"Step Reward: {reward:.2f}")
-        print(f"Feedback: {info['reward_details']['feedback']}")
-        print(f"Done: {done}")
-        print("-" * 20)
-        
-        step_num += 1
+            # Check success condition (correct decision at high performance)
+            if done and reward >= 0.8:
+                success = True
 
-    print(f"Total Cumulative Reward: {total_reward}")
-    print(f"Conclusion: Correct decision was {info['correct_decision']} (Severity: {info['severity']})")
-    print("[END]")
+            # [STEP] line
+            action_str = f"{action.action_type}({action.value})"
+            print(f"[STEP] step={step_num} action={action_str} reward={reward:.2f} done={str(done).lower()} error=null")
+            
+            step_num += 1
+    except Exception as e:
+        # Fallback for error logging if something crashes
+        if not done:
+             print(f"[STEP] step={step_num} action=error reward=0.00 done=true error={str(e)}")
+
+    # [END] line
+    steps_taken = step_num - 1
+    rewards_str = ",".join([f"{r:.2f}" for r in rewards])
+    print(f"[END] success={str(success).lower()} steps={steps_taken} rewards={rewards_str}")
 
 if __name__ == "__main__":
     run_simulation()

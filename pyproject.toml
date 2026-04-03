@@ -1,0 +1,22 @@
+[project]
+name = "medroute-ai"
+version = "0.1.0"
+description = "Healthcare triage OpenEnv environment"
+authors = [
+    {name = "Vivek Goud Adula"}
+]
+requires-python = ">=3.10"
+
+dependencies = [
+    "openai",
+    "fastapi",
+    "uvicorn",
+    "pydantic>=2.0.0",
+    "openenv-core>=0.2.0"
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.openenv]
+env_module = "env.environment"
