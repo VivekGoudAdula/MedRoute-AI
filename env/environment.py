@@ -13,10 +13,14 @@ class MedRouteEnv(OpenEnvBase):
         self.grader = MedRouteGrader()
         self.reset()
 
-    def reset(self, case_id: Optional[int] = None, task_id: Optional[str] = None) -> Observation:
-        if task_id:
-            self.task_id = task_id
-            
+    def reset(self, seed: Optional[int] = None, episode_id: Optional[str] = None, **kwargs) -> Observation:
+        self._reset_rubric()
+        
+        # Consistent seeding
+        if seed is not None:
+             random.seed(seed)
+             
+        case_id = kwargs.get("case_id")
         if case_id is None:
             self.case = random.choice(CASES)
         else:
@@ -29,11 +33,13 @@ class MedRouteEnv(OpenEnvBase):
         self.has_classified = False
         self.current_feedback = None
         self.final_reward = 0.0
+        self.episode_id = episode_id or f"episode-{random.randint(1000, 9999)}"
 
-        return self.state()
+        return self.state
 
+    @property
     def state(self) -> Observation:
-        # Provide a hint in feedback if already classified
+        """Property-based state for dashboard compatibility."""
         feedback = self.current_feedback
         if self.has_classified and not self.done:
             feedback = (feedback + " " if feedback else "") + "(Urgency already classified. Next step: DECIDE_TREATMENT)"
@@ -52,7 +58,7 @@ class MedRouteEnv(OpenEnvBase):
 
     def step(self, action: Action) -> Observation:
         if self.done:
-            return self.state()
+            return self.state
 
         self.step_count += 1
         
