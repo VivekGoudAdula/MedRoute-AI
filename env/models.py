@@ -1,6 +1,15 @@
 from pydantic import Field
 from typing import List, Optional, Literal
-from openenv.core.env_server.types import Action as BaseAction, Observation as BaseObservation
+from openenv.core.env_server.types import Action as BaseAction, Observation as BaseObservation, State as BaseState
+
+class MedRouteState(BaseState):
+    initial_symptoms: List[str] = Field(default_factory=list, description="Symptoms initially reported by the patient")
+    revealed_symptoms: List[str] = Field(default_factory=list, description="Additional symptoms discovered after asking questions")
+    asked_questions: List[str] = Field(default_factory=list, description="History of questions asked by the agent")
+    available_questions: List[str] = Field(default_factory=list, description="Possible follow-up questions the agent can ask")
+    max_steps: int = Field(default=10, description="Maximum steps allowed")
+    feedback: Optional[str] = Field(default=None, description="System hint for the agent")
+    done: bool = Field(default=False, description="Whether the episode is finished")
 
 class Observation(BaseObservation):
     initial_symptoms: List[str] = Field(default_factory=list, description="Symptoms initially reported by the patient")

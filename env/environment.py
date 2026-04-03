@@ -1,7 +1,7 @@
 from openenv.core.env_server.interfaces import Environment as OpenEnvBase
 import random
 from typing import List, Dict, Tuple, Optional
-from .models import Observation, Action, Reward
+from .models import Observation, Action, Reward, MedRouteState
 from .tasks import PatientCase, CASES
 from .grader import MedRouteGrader
 
@@ -35,11 +35,29 @@ class MedRouteEnv(OpenEnvBase):
         self.final_reward = 0.0
         self.episode_id = episode_id or f"episode-{random.randint(1000, 9999)}"
 
-        return self.state
+        return self._get_obs()
 
     @property
-    def state(self) -> Observation:
+    def state(self) -> MedRouteState:
         """Property-based state for dashboard compatibility."""
+        feedback = self.current_feedback
+        if self.has_classified and not self.done:
+            feedback = (feedback + " " if feedback else "") + "(Urgency already classified. Next step: DECIDE_TREATMENT)"
+
+        return MedRouteState(
+            episode_id=self.episode_id,
+            step_count=self.step_count,
+            initial_symptoms=self.case.initial_symptoms,
+            revealed_symptoms=self.revealed_symptoms,
+            asked_questions=self.asked_questions,
+            available_questions=self.case.relevant_questions,
+            max_steps=self.max_steps,
+            feedback=feedback,
+            done=self.done
+        )
+        
+    def _get_obs(self) -> Observation:
+        """Construct the observation object to return from step() and reset()."""
         feedback = self.current_feedback
         if self.has_classified and not self.done:
             feedback = (feedback + " " if feedback else "") + "(Urgency already classified. Next step: DECIDE_TREATMENT)"
@@ -58,7 +76,7 @@ class MedRouteEnv(OpenEnvBase):
 
     def step(self, action: Action) -> Observation:
         if self.done:
-            return self.state
+            return self._get_obs()
 
         self.step_count += 1
         
@@ -102,7 +120,7 @@ class MedRouteEnv(OpenEnvBase):
         if action.action_type == "DECIDE_TREATMENT" or self.step_count >= self.max_steps:
              self.done = True
 
-        return self.state
+        return self._get_obs()
 
     def _check_revealed_symptoms(self, question: str) -> List[str]:
         q_lower = question.lower()
