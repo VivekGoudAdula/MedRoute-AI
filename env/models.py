@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Literal
 
 class Observation(BaseModel):
     initial_symptoms: List[str] = Field(description="Symptoms initially reported by the patient")
@@ -13,8 +13,12 @@ class Observation(BaseModel):
     done: bool = Field(default=False, description="Whether the episode is finished")
 
 class Action(BaseModel):
-    action_type: str = Field(description="Type of action: 'ASK', 'CLASSIFY_URGENCY', or 'DECIDE_TREATMENT'")
-    value: str = Field(description="Specific question, urgency level (low/medium/high), or decision (home/clinic/hospital/emergency)")
+    action_type: Literal['ASK', 'CLASSIFY_URGENCY', 'DECIDE_TREATMENT'] = Field(
+        description="Type of action"
+    )
+    value: str = Field(
+        description="Value: A question (for ASK), Level (low/medium/high for CLASSIFY), or Decision (home/clinic/hospital/emergency for DECIDE)"
+    )
     reasoning: Optional[str] = Field(default=None, description="Internal reasoning for the triage decision")
 
 class Reward(BaseModel):
