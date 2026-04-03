@@ -1,4 +1,4 @@
-from openenv.core.server import create_app
+from openenv.core.env_server import create_app
 from env.environment import MedRouteEnv
 
 # This creates the official OpenEnv FastAPI + Gradio UI app
