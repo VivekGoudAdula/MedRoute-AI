@@ -28,6 +28,7 @@ COPY . .
 # Default environment variables (can be overridden)
 ENV API_BASE_URL="https://api.openai.com/v1"
 ENV MODEL_NAME="gpt-4o-mini"
+ENV ENABLE_WEB_INTERFACE=true
 
 # Do NOT hardcode API keys (security + HF compatibility)
 # They will be passed during runtime
