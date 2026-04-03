@@ -13,12 +13,12 @@ class Observation(BaseObservation):
 
 class Action(BaseAction):
     action_type: Literal['ASK', 'CLASSIFY_URGENCY', 'DECIDE_TREATMENT'] = Field(
-        description="Type of action"
+        description="ASK or CLASSIFY_URGENCY or DECIDE_TREATMENT"
     )
     value: str = Field(
-        description="A question (for ASK), Level (low/medium/high for CLASSIFY), or Decision (home/clinic/hospital/emergency for DECIDE)"
+        description="For ASK → choose from available_questions. For DECIDE → use: clinic / emergency / home_care. For CLASSIFY → low/medium/high."
     )
-    reasoning: Optional[str] = Field(default=None, description="Internal reasoning for the triage decision")
+    reasoning: Optional[str] = Field(default=None, description="Explain why you're taking this action")
 
 class Reward(BaseAction):
     total_reward: float = Field(default=0.0, description="Aggregated reward score (0.0 - 1.0)")
