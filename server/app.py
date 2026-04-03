@@ -23,10 +23,22 @@ web_manager = WebInterfaceManager(MedRouteEnv, Action, Observation, metadata)
 
 # 3. Create Custom Quick Start Instructions for Judges
 custom_quick_start = """
-### 👉 Steps:
-1. Click **Reset**
-2. Use **ASK** to gather symptoms
-3. Use **DECIDE** to make final decision
+# 🩺 MedRoute AI: How to Test
+
+Welcome Judge! This is a live simulation. Your goal is to figure out the patient's condition by asking questions, and then make a final medical decision.
+
+### 👉 EXACT STEPS:
+1. **START:** Click the **Reset** button to get a random patient case. Read their `initial_symptoms` in the Status box below.
+2. **INVESTIGATE:** In the UI above:
+   - Select **Action Type:** `ASK`
+   - Set **Value:** (Type a question, e.g., "Do you have a fever?" or "How is your breathing?")
+   - Click **Step**. Watch the Status box to see if any hidden symptoms are revealed!
+3. **DECIDE:** Once you know what's wrong:
+   - Select **Action Type:** `DECIDE_TREATMENT`
+   - Set **Value:** Type `home`, `clinic`, `hospital`, or `emergency`.
+   - Click **Step**!
+
+You will receive a **Final Reward Score** based on your clinical efficiency and accuracy!
 """
 
 action_fields = _extract_action_fields(Action)

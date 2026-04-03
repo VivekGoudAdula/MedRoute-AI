@@ -102,7 +102,7 @@ class MedRouteEnv(OpenEnvBase):
         if action.action_type == "DECIDE_TREATMENT" or self.step_count >= self.max_steps:
              self.done = True
 
-        return self.state()
+        return self.state
 
     def _check_revealed_symptoms(self, question: str) -> List[str]:
         q_lower = question.lower()
@@ -121,7 +121,7 @@ class MedRouteEnv(OpenEnvBase):
         return new_symptoms
 
     def render(self):
-        obs = self.state()
+        obs = self.state
         print(f"--- MedRoute AI ---")
         print(f"Symptoms: {', '.join(obs.revealed_symptoms)}")
         print(f"History:  {', '.join(self.asked_questions)}")
