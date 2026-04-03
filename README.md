@@ -6,9 +6,13 @@ colorTo: green
 sdk: docker
 app_file: app.py
 pinned: false
+license: mit
+short_description: AI-powered healthcare triage simulation environment -OpenEnv
 ---
 
 # 🏥 MedRoute AI: Healthcare Triage Simulator
+
+**🏅 Official Submission for the OpenEnv Hackathon X Scaler Technology (by Meta, PyTorch, & Hugging Face)**
 
 An **OpenEnv-compliant reinforcement learning environment** that simulates real-world medical triage decision-making in rural and low-resource settings.
 
@@ -240,15 +244,4 @@ This system has potential applications in:
 MedRoute AI is not just a simulation — it is a **training ground for safer AI decision-making in healthcare**, where mistakes have real-world consequences.
 
 By combining structured environments with intelligent reward design, it pushes forward the development of **trustworthy AI systems for critical domains**.
----
-title: Medroute Ai
-emoji: 🏃
-colorFrom: indigo
-colorTo: blue
-sdk: docker
-pinned: false
-license: mit
-short_description: AI-powered healthcare triage simulation environment -OpenEnv
----
-
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+By combining structured environments with intelligent reward design, it pushes forward the development of **trustworthy AI systems for critical domains**.
