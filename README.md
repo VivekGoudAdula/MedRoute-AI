@@ -8,6 +8,8 @@ app_file: app.py
 pinned: false
 license: mit
 short_description: AI-powered healthcare triage simulation environment -OpenEnv
+tags:
+  - openenv
 ---
 
 # 🏥 MedRoute AI: Healthcare Triage Simulator
