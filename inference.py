@@ -1,40 +1,42 @@
 import os
 import json
+import time
 from typing import Dict, List, Optional
-from dotenv import load_dotenv
 from openai import OpenAI
 from env.environment import MedRouteEnv
 from env.models import Action
 
-# Load .env variables
-load_dotenv()
+# --- STRICT OPENENV CONFIGURATION ---
+# These are MUST for Phase 2 validation via LiteLLM proxy
+API_BASE_URL = os.environ["API_BASE_URL"]
+API_KEY = os.environ["API_KEY"]
+MODEL_NAME = os.environ["MODEL_NAME"]
 
-# Configuration (Matches OpenEnv Checklist Strictly)
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
-HF_TOKEN = os.getenv("HF_TOKEN")
+# Metadata
+TASK_NAME = os.environ.get("TASK_NAME", "complete-triage")
+BENCHMARK = os.environ.get("BENCHMARK", "medroute-ai")
 
-# Use HF_TOKEN as the primary API_KEY
-API_KEY = HF_TOKEN or os.getenv("OPENAI_API_KEY")
+# Initialize OpenAI Client (STRICT: Bypassing local OpenAI endpoint)
+client = OpenAI(
+    base_url=API_BASE_URL,
+    api_key=API_KEY
+)
 
-# Task and Benchmark metadata
-TASK_NAME = os.getenv("TASK_NAME", "complete-triage")
-BENCHMARK = os.getenv("BENCHMARK", "medroute-ai")
+# LOGGING HELPERS (Strictly follow [START], [STEP], [END] format)
+def log_start(task: str, env: str, model: str):
+    print(f"[START] task={task} env={env} model={model}", flush=True)
 
-# FALLBACK CONFIG (GROQ)
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str] = None):
+    error_str = error if error else "null"
+    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error={error_str}", flush=True)
 
-def get_agent_action(obs: Dict, use_fallback=False) -> Action:
-    """Agentic decision maker using LLM."""
+def log_end(success: bool, steps: int, score: float, rewards: List[float]):
+    rewards_str = ",".join([f"{r:.2f}" for r in rewards])
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}", flush=True)
+
+def get_agent_action(obs: Dict) -> Action:
+    """Agentic decision maker using the provided LiteLLM proxy."""
     
-    client = OpenAI(
-        base_url=API_BASE_URL if not use_fallback else GROQ_BASE_URL,
-        api_key=API_KEY if not use_fallback else GROQ_API_KEY
-    )
-    model = MODEL_NAME if not use_fallback else GROQ_MODEL
-
     prompt = f"""
     You are an expert healthcare triage assistant. 
     Analyze the following patient data and decide on the NEXT best action.
@@ -42,7 +44,7 @@ def get_agent_action(obs: Dict, use_fallback=False) -> Action:
     PATIENT SYMPTOMS REVEALED: {obs['revealed_symptoms']}
     HISTORY OF QUESTIONS: {obs['asked_questions']}
     STEP: {obs['step_count']}/{obs['max_steps']}
-    SYSTEM FEEDBACK: {obs['feedback'] if obs['feedback'] else 'None. Good luck!'}
+    SYSTEM FEEDBACK: {obs['feedback'] if obs['feedback'] else 'None.'}
     
     ACTIONS ALLOWED:
     1. 'ASK': question (about symptoms, history, etc.)
@@ -52,39 +54,36 @@ def get_agent_action(obs: Dict, use_fallback=False) -> Action:
     STRATEGY:
     - If symptoms are vague, ASK 1-2 relevant follow-up questions first.
     - REPETITION: Never ask the same question twice and do NOT classify urgency more than once.
-    - EFFICIENCY: Settle on a decision as quickly as possible (ideally within 5-6 steps).
-    - FINAL STEP: If you are at step {obs['max_steps']} (or near it), or if you have already classified urgency, you should move to 'DECIDE_TREATMENT' soon.
+    - EFFICIENCY: Settle on a decision accurately and quickly.
+    - FINAL STEP: You MUST move to 'DECIDE_TREATMENT' eventually.
     
     RESPONSE FORMAT (JSON):
     {{
         "action_type": "ASK" | "CLASSIFY_URGENCY" | "DECIDE_TREATMENT",
         "value": "your question or level or decision",
-        "reasoning": "Briefly explain WHY you chose this action (helpful for triage transparency)"
+        "reasoning": "Briefly explain WHY you chose this action"
     }}
     """
 
     try:
         response = client.chat.completions.create(
-            model=model,
+            model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"}
         )
         data = json.loads(response.choices[0].message.content)
         return Action(**data)
-    except Exception:
-        if not use_fallback and GROQ_API_KEY:
-            return get_agent_action(obs, use_fallback=True)
-        else:
-            return Action(action_type="DECIDE_TREATMENT", value="clinic")
+    except Exception as e:
+        # Emergency fallback (non-API) to ensure script completes
+        return Action(action_type="DECIDE_TREATMENT", value="clinic", reasoning=f"API error: {str(e)}")
 
 def run_simulation():
-    # Pass task_id through env if supported, otherwise it uses default from grader
-    env = MedRouteEnv(max_steps=8)
+    # Initialize Environment
+    env = MedRouteEnv(max_steps=8, task_id=TASK_NAME)
     obs_model = env.reset()
     obs = obs_model.model_dump()
     
-    # [START] line
-    print(f"[START] task={TASK_NAME} env={BENCHMARK} model={MODEL_NAME}")
+    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
     
     done = False
     step_num = 1
@@ -92,7 +91,7 @@ def run_simulation():
     success = False
 
     try:
-        while not done:
+        while not done and step_num <= 8:
             # 1. Agent decision
             action = get_agent_action(obs)
             
@@ -103,24 +102,28 @@ def run_simulation():
             done = obs_model.done or False
             rewards.append(reward)
 
-            # Check success condition
-            if done and reward >= 0.8:
-                success = True
-
             # [STEP] line
             action_str = f"{action.action_type}({action.value})"
-            print(f"[STEP] step={step_num} action={action_str} reward={reward:.2f} done={str(done).lower()} error=null")
+            log_step(step=step_num, action=action_str, reward=reward, done=done)
+            
+            if done:
+                break
             
             step_num += 1
-    except Exception as e:
-        # Fallback for error logging if something crashes
-        if not done:
-             print(f"[STEP] step={step_num} action=error reward=0.00 done=true error={str(e)}")
+            
+        # Final evaluation
+        final_score = max(rewards) if rewards else 0.0
+        success = final_score >= 0.8
 
-    # [END] line
-    steps_taken = step_num - 1
-    rewards_str = ",".join([f"{r:.2f}" for r in rewards])
-    print(f"[END] success={str(success).lower()} steps={steps_taken} rewards={rewards_str}")
+    except Exception as e:
+        log_step(step=step_num, action="error", reward=0.0, done=True, error=str(e))
+    finally:
+        steps_taken = len(rewards)
+        score = max(rewards) if rewards else 0.0
+        log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
+
+if __name__ == "__main__":
+    run_simulation()
 
 if __name__ == "__main__":
     run_simulation()

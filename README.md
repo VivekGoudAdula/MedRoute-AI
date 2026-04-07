@@ -170,8 +170,7 @@ pip install -r requirements.txt
 Create a `.env` file:
 
 ```env
-OPENAI_API_KEY=your_key
-GROQ_API_KEY=your_key
+API_KEY=your_key
 API_BASE_URL=https://api.openai.com/v1
 MODEL_NAME=gpt-4o-mini
 ```
@@ -198,19 +197,11 @@ docker run -e OPENAI_API_KEY=your_key medroute-ai
 ## 📊 Sample Output
 
 ```
-[START]
-Patient initial symptoms: ['sudden confusion', 'slurred speech']
-
-[STEP] 1
-Action: ASK -> Are you experiencing weakness in your limbs?
-
-[STEP] 2
-Action: CLASSIFY_URGENCY -> high
-
-[STEP] 3
-Action: DECIDE_TREATMENT -> emergency
-
-[END]
+[START] task=complete-triage env=medroute-ai model=gpt-4o-mini
+[STEP] step=1 action=ASK(Do you have weakness on one side?) reward=0.30 done=false error=null
+[STEP] step=2 action=CLASSIFY_URGENCY(high) reward=0.60 done=false error=null
+[STEP] step=3 action=DECIDE_TREATMENT(emergency) reward=1.00 done=true error=null
+[END] success=true steps=3 score=1.00 rewards=0.30,0.60,1.00
 ```
 
 ---
