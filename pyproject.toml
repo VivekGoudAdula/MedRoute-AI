@@ -8,11 +8,15 @@ authors = [
 requires-python = ">=3.10"
 
 dependencies = [
-    "openai",
-    "fastapi",
-    "uvicorn",
-    "pydantic>=2.0.0",
-    "openenv-core>=0.2.0"
+    "openai==2.30.0",
+    "fastapi==0.115.12",
+    "uvicorn==0.42.0",
+    "pydantic==2.12.5",
+    "openenv-core==0.2.3",
+    "gradio==6.5.1",
+    "python-dotenv==1.1.0",
+    "PyYAML==6.0.2",
+    "openenv==0.1.13"
 ]
 
 [project.scripts]

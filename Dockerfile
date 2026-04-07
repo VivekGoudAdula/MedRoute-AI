@@ -1,5 +1,5 @@
-# Use minimal Python image
-FROM python:3.10-slim
+# Use specific, stable Python image to avoid pull issues
+FROM python:3.10.14-slim-bullseye
 
 # Prevent Python from writing .pyc files
 ENV PYTHONDONTWRITEBYTECODE=1
