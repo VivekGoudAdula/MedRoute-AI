@@ -13,18 +13,18 @@ class MedRouteEnv(OpenEnvBase):
         self.grader = MedRouteGrader()
         self.reset()
 
-    def reset(self, seed: Optional[int] = None, episode_id: Optional[str] = None, **kwargs) -> Observation:
-        self._reset_rubric()
-        
+    def reset(self, seed: Optional[int] = None, episode_id: Optional[str] = None, task_id: Optional[str] = None, **kwargs) -> Observation:
+        # Update task_id if provided
+        if task_id:
+            self.task_id = task_id
+            
         # Consistent seeding
         if seed is not None:
              random.seed(seed)
              
+        from .tasks import get_case_for_task
         case_id = kwargs.get("case_id")
-        if case_id is None:
-            self.case = random.choice(CASES)
-        else:
-            self.case = next((c for c in CASES if c.case_id == case_id), CASES[0])
+        self.case = get_case_for_task(self.task_id, case_id)
         
         self.asked_questions = []
         self.revealed_symptoms = list(self.case.initial_symptoms)

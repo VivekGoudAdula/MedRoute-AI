@@ -77,13 +77,13 @@ def get_agent_action(obs: Dict) -> Action:
         # Emergency fallback (non-API) to ensure script completes
         return Action(action_type="DECIDE_TREATMENT", value="clinic", reasoning=f"API error: {str(e)}")
 
-def run_simulation():
+def run_simulation(task_name: str):
     # Initialize Environment
-    env = MedRouteEnv(max_steps=8, task_id=TASK_NAME)
-    obs_model = env.reset()
+    env = MedRouteEnv(max_steps=8, task_id=task_name)
+    obs_model = env.reset(task_id=task_name)
     obs = obs_model.model_dump()
     
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
+    log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME)
     
     done = False
     step_num = 1
@@ -123,4 +123,7 @@ def run_simulation():
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
 if __name__ == "__main__":
-    run_simulation()
+    TASKS = ["urgency-discovery", "symptom-investigation", "complete-triage"]
+    for task in TASKS:
+        run_simulation(task)
+        print("\n" + "="*50 + "\n", flush=True) # visual separator for logs

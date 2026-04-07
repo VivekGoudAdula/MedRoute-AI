@@ -127,7 +127,7 @@ class MedRouteGrader:
             # Full triage
             total = (q_score * 0.3) + (u_score * 0.3) + (d_score * 0.4) - penalty
         
-        total = max(0.0, min(1.0, total))
+        total = max(0.01, min(0.99, total))
 
         return Reward(
             total_reward=round(total, 2),

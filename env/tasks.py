@@ -133,3 +133,18 @@ CASES = [
         relevant_questions=["Is there facial drooping?", "Can you lift both arms?", "When did this start?"]
     )
 ]
+
+# --- TASK DEFINITIONS ---
+
+TASKS_MAPPING = {
+    "urgency-discovery": [c for c in CASES if c.severity == "low"],
+    "symptom-investigation": [c for c in CASES if c.severity == "medium"],
+    "complete-triage": [c for c in CASES if c.severity == "high"]
+}
+
+def get_case_for_task(task_id: str, case_id: int = None):
+    available_cases = TASKS_MAPPING.get(task_id, CASES)
+    if case_id is not None:
+        return next((c for c in available_cases if c.case_id == case_id), available_cases[0])
+    import random
+    return random.choice(available_cases)
