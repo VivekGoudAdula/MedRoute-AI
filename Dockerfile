@@ -1,5 +1,5 @@
 # Use specific, stable Python image to avoid pull issues
-FROM python:3.10-slim
+FROM python:3.10.13-slim
 
 # Prevent Python from writing .pyc files
 ENV PYTHONDONTWRITEBYTECODE=1
